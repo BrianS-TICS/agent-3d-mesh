@@ -26,6 +26,24 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
-  "author": "",
-  "license": "MIT"
+  "author": "Brian Sanchez",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BrianS-TICS/agent-3d-mesh.git"
+  },
+  "keywords": [
+    "3d",
+    "mesh",
+    "gemini",
+    "tripo3d",
+    "ai",
+    "orchestrator",
+    "agent"
+  ],
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ]
 }
