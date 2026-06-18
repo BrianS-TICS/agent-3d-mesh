@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multimodal to 3D Generation</title>
+    <link rel="icon" type="image/svg+xml" href="/logo.svg">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Support Badge -->
+    <a href="https://studio.tripo3d.ai?via=briansanchez" target="_blank" rel="noopener noreferrer"
+        title="Get Tripo3D with my referral link!"
+        style="position: fixed; bottom: 20px; left: 20px; background: rgba(17, 17, 17, 0.8); border: 1px solid #333; color: #aaa; padding: 10px 16px; border-radius: 50px; text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 100; transition: all 0.2s; cursor: pointer;"
+        onmouseover="this.style.color='#fff'; this.style.borderColor='#555'; this.style.transform='translateY(-2px)';"
+        onmouseout="this.style.color='#aaa'; this.style.borderColor='#333'; this.style.transform='none';">
+        <i data-lucide="heart" style="width: 14px; height: 14px; color: #ff4a4a;"></i> Support Me
+    </a>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <img src="logo.svg" alt="Logo" style="height: 32px; margin-right: 8px; vertical-align: middle;">
+            agent-3d-mesh <span class="version">v1.0.0</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/app.html">Launch App</a>
+            <a href="/docs.html">Documentation</a>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        <!-- Left Sidebar: Settings & Status -->
+        <aside class="left-sidebar">
+            <div style="margin-bottom: 2rem;">
+                <h3 style="font-size: 1.1rem; color: #fff; margin-bottom: 1rem;">Configuration</h3>
+
+                <div style="margin-bottom: 1rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                        <label style="color: #aaa; font-size: 0.8rem;">Reasoning Engine</label>
+                        <label
+                            style="color: #3291ff; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="checkbox" id="useGemini" checked style="accent-color: #3291ff;">
+                            Enable
+                        </label>
+                    </div>
+                    <select id="geminiModel" class="input-field"
+                        style="width: 100%; padding: 0.5rem; background: #111;">
+                        <optgroup label="Latest Stable">
+                            <option value="gemini-pro-latest">Gemini Pro Latest</option>
+                            <option value="gemini-flash-latest">Gemini Flash Latest</option>
+                            <option value="gemini-flash-lite-latest">Gemini Flash-Lite Latest</option>
+                        </optgroup>
+                        <optgroup label="Generation 3 (Next-Gen)">
+                            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+                            <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro (Preview)</option>
+                            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
+                            <option value="gemini-3-flash-preview">Gemini 3.0 Flash (Preview)</option>
+                        </optgroup>
+                        <optgroup label="Generation 2.5">
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+                        </optgroup>
+                        <optgroup label="Generation 2.0">
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                            <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                        <label style="color: #aaa; font-size: 0.8rem; display: block;">Creativity (Temperature)</label>
+                        <span id="tempValue" style="color: #fff; font-size: 0.8rem;">1.0</span>
+                    </div>
+                    <input type="range" id="geminiTemp" min="0.0" max="2.0" step="0.1" value="1.0" style="width: 100%;">
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: #aaa; font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">3D Generation
+                        Engine</label>
+                    <select id="tripoEngine" class="input-field"
+                        style="width: 100%; padding: 0.5rem; background: #111;">
+                        <option value="default">Tripo3D Default (~20 Credits)</option>
+                        <option value="P1-20260311">Tripo3D P1 V3 Pro (~50 Credits)</option>
+                        <option value="Turbo-v1.0-20250506">Tripo3D Turbo V2.5 (~10 Credits)</option>
+                        <option value="v2.0-20240919">Tripo3D Legacy V2.0 (~15 Credits)</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: #aaa; font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Texture
+                        Quality</label>
+                    <select id="textureQuality" class="input-field"
+                        style="width: 100%; padding: 0.5rem; background: #111;">
+                        <option value="standard">Standard (+10 Credits)</option>
+                        <option value="detailed">Detailed (+20 Credits)</option>
+                        <option value="extreme">Extreme (+30 Credits)</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="color: #aaa; font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Art Style
+                        Modifier</label>
+                    <select id="styleModifier" class="input-field"
+                        style="width: 100%; padding: 0.5rem; background: #111;">
+                        <option value="">None (Auto)</option>
+                        <option value="low poly game asset">Low Poly</option>
+                        <option value="hyperrealistic 8k">Hyperrealistic</option>
+                        <option value="cyberpunk sci-fi style">Cyberpunk</option>
+                        <option value="cute cartoon voxel style">Voxel / Cartoon</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="font-size: 1.1rem; color: #fff; margin: 0;">System Status</h3>
+                    <button onclick="document.getElementById('setupModal').classList.remove('hidden')"
+                        style="background: transparent; border: 1px solid #333; color: #aaa; border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.7rem; cursor: pointer; transition: color 0.2s;"
+                        onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#aaa'"><i
+                            data-lucide="settings-2"
+                            style="width:12px;height:12px;vertical-align:-2px;margin-right:4px;"></i>Edit Keys</button>
+                </div>
+                <div
+                    style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; color: #aaa; font-size: 0.85rem;">
+                    <div id="geminiDot" style="width: 8px; height: 8px; border-radius: 50%; background: #666;"></div>
+                    <span id="geminiText">Checking Gemini API...</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: #aaa; font-size: 0.85rem;">
+                    <div id="tripoDot" style="width: 8px; height: 8px; border-radius: 50%; background: #666;"></div>
+                    <span id="tripoText">Checking Tripo3D API...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="hero">
+            <div class="hero-content">
+                <img src="/logo.svg" alt="App Logo" style="height: 70px; margin-bottom: 1.5rem;">
+                <h1 class="title">Multimodal<br>to 3D Generation</h1>
+                <p class="subtitle">Agentic orchestrator leveraging Google Gemini for semantic reasoning and Tripo3D
+                    Cloud API for high-fidelity 3D mesh generation.</p>
+
+                <div class="upload-container" id="uploadPanel">
+                    <div class="input-group">
+                        <label for="promptInput" class="input-label">Text Prompt</label>
+                        <textarea id="promptInput" rows="3" placeholder="e.g. A beautiful low poly diorama..."
+                            class="input-field" style="resize: vertical;"></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Reference Image (Optional)</label>
+                        <div class="file-upload">
+                            <label for="imageInput" class="file-label">
+                                <div id="imagePreviewContainer" class="hidden" style="margin-bottom: 10px;">
+                                    <img id="imagePreview" src="" alt="Preview"
+                                        style="max-height: 150px; border-radius: 6px; max-width: 100%;">
+                                </div>
+                                <span id="fileName">+ Upload an image to guide the generation</span>
+                                <input type="file" id="imageInput" accept="image/png, image/jpeg, image/webp">
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" style="width: 100%; padding: 0.8rem; margin-top: 0.5rem;"
+                        id="generateBtn">Generate 3D Mesh</button>
+                    <div id="result" class="result-message"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- History Sidebar -->
+        <aside class="history-sidebar">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.1rem; color: #fff;">History</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="importTaskPrompt()" class="btn-secondary" title="Import from Task ID"
+                        style="padding: 0.3rem 0.6rem; font-size: 0.8rem;"><i data-lucide="download-cloud"
+                            style="width:12px;height:12px;"></i></button>
+                    <button id="showGalleryBtn" class="btn-secondary"
+                        style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Show All</button>
+                </div>
+            </div>
+            <div id="historyList" class="history-list">
+                <p style="color: #666; font-size: 0.9rem; text-align: center; margin-top: 2rem;">Loading history...</p>
+            </div>
+        </aside>
+    </div>
+    <!-- Rename Modal -->
+    <div id="renameModal" class="hidden"
+        style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div
+            style="background: #111; border: 1px solid #333; padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <h2
+                style="color: #fff; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 1rem;"><i
+                    data-lucide="edit-2" style="width:20px;height:20px;vertical-align:-3px;margin-right:8px;"></i>Rename Model</h2>
+            
+            <div style="margin-top: 1.5rem;">
+                <label style="color: #aaa; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;"><strong>New File Name (without .glb)</strong></label>
+                <input type="text" id="renameInput" placeholder="Enter new name..."
+                    style="width: 100%; padding: 0.8rem; border-radius: 6px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 1rem; font-family: inherit;">
+            </div>
+
+            <p id="renameErrorMsg" class="hidden" style="color: #ff4a4a; font-size: 0.8rem; margin-top: 0.5rem;"></p>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button onclick="document.getElementById('renameModal').classList.add('hidden')"
+                    style="flex: 1; background: transparent; color: #aaa; border: 1px solid #333; padding: 0.8rem; border-radius: 8px; cursor: pointer;">Cancel</button>
+                <button id="confirmRenameBtn" class="btn-primary"
+                    style="flex: 1; padding: 0.8rem; border-radius: 8px;">Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Gallery Modal -->
+    <div id="galleryModal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 900px; width: 95%; max-height: 90vh; overflow-y: auto;">
+            <div
+                style="display: flex; justify-content: space-between; width: 100%; border-bottom: 1px solid #333; padding-bottom: 1rem; margin-bottom: 1rem;">
+                <h2 style="color: white; margin: 0;">Full Gallery</h2>
+                <button id="closeGalleryBtn"
+                    style="background: none; border: none; color: #aaa; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div id="galleryGrid"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; width: 100%;">
+                <!-- Gallery items will go here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Guide Modal -->
+    <div id="setupModal" class="hidden"
+        style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div
+            style="background: #111; border: 1px solid #333; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <h2 id="setupModalTitle"
+                style="color: #fff; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 1rem;"><i
+                    data-lucide="key" style="width:20px;height:20px;vertical-align:-3px;margin-right:8px;"></i>Setup
+                Required</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin-top: 1rem;">It looks like some API keys are missing. To
+                unleash the full power of this orchestrator, you need to configure your environment variables.</p>
+
+            <div
+                style="margin-top: 1.5rem; background: #000; padding: 1rem; border-radius: 8px; border: 1px solid #222;">
+                <label style="color: #fff; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;"><strong>Google
+                        Gemini API Key</strong></label>
+                <input type="password" id="geminiKeyInput" placeholder="AIzaSy..."
+                    style="width: 100%; padding: 0.8rem; border-radius: 6px; border: 1px solid #333; background: #111; color: #3291ff; margin-bottom: 1rem;">
+
+                <label style="color: #fff; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;"><strong>Tripo3D
+                        API Key</strong></label>
+                <input type="password" id="tripoKeyInput" placeholder="tsk_..."
+                    style="width: 100%; padding: 0.8rem; border-radius: 6px; border: 1px solid #333; background: #111; color: #3291ff;">
+                <p style="font-size: 0.75rem; color: #888; margin-top: 0.6rem;">
+                    Don't have an API key? <a href="https://studio.tripo3d.ai?via=briansanchez" target="_blank"
+                        rel="noopener noreferrer" style="color: #3291ff; text-decoration: none;">Get one here</a> and
+                    receive free bonus credits!
+                </p>
+            </div>
+
+            <p id="setupErrorMsg" class="hidden" style="color: #ff4a4a; font-size: 0.8rem; margin-top: 1rem;"></p>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button onclick="document.getElementById('setupModal').classList.add('hidden')"
+                    style="flex: 1; background: transparent; color: #aaa; border: 1px solid #333; padding: 0.8rem; border-radius: 8px; cursor: pointer;">Cancel</button>
+                <button id="saveConfigBtn"
+                    style="flex: 2; background: #fff; color: #000; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer;">Save
+                    & Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Task Modal -->
+    <div id="importTaskModal" class="hidden"
+        style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div
+            style="background: #111; border: 1px solid #333; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <h2 style="color: #fff; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 1rem;"><i
+                    data-lucide="download-cloud"
+                    style="width:20px;height:20px;vertical-align:-3px;margin-right:8px;"></i>Import Model</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin-top: 1rem;">Enter the Tripo3D Task ID from your dashboard
+                to fetch and render the 3D model locally.</p>
+
+            <div
+                style="margin-top: 1.5rem; background: #000; padding: 1rem; border-radius: 8px; border: 1px solid #222;">
+                <label style="color: #fff; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;"><strong>Task
+                        ID</strong></label>
+                <input type="text" id="importTaskIdInput" placeholder="e.g. 816c1282-e163..."
+                    style="width: 100%; padding: 0.8rem; border-radius: 6px; border: 1px solid #333; background: #111; color: #3291ff;">
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button onclick="document.getElementById('importTaskModal').classList.add('hidden')"
+                    style="flex: 1; background: transparent; color: #aaa; border: 1px solid #333; padding: 0.8rem; border-radius: 8px; cursor: pointer;">Cancel</button>
+                <button id="submitImportBtn"
+                    style="flex: 2; background: #fff; color: #000; border: none; padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer;">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restrictive Loading & Error Modal -->
+    <div id="overlayModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div id="modalSpinner" class="spinner"></div>
+            <h2 id="modalTitle" class="modal-title">Generating 3D Model...</h2>
+            <p id="modalMessage" class="modal-message">This might take a few moments depending on complexity.</p>
+            <button id="modalCloseBtn" class="btn-secondary hidden"
+                style="margin-top: 1.5rem; width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('imageInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const fileNameSpan = document.getElementById('fileName');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImage = document.getElementById('imagePreview');
+
+            if (file) {
+                fileNameSpan.textContent = file.name;
+                document.querySelector('.file-label').style.borderColor = 'white';
+                document.querySelector('.file-label').style.color = 'white';
+
+                // Show preview
+                previewImage.src = URL.createObjectURL(file);
+                previewContainer.classList.remove('hidden');
+            } else {
+                fileNameSpan.textContent = '+ Upload an image to guide the generation';
+                previewContainer.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const prompt = document.getElementById('promptInput').value;
+            const imageFile = document.getElementById('imageInput').files[0];
+            const result = document.getElementById('result');
+
+            const modal = document.getElementById('overlayModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalSpinner = document.getElementById('modalSpinner');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+            if (!prompt && !imageFile) {
+                // If inputs are missing, show error in modal
+                modal.classList.remove('hidden');
+                modalSpinner.classList.add('hidden');
+                modalTitle.textContent = 'Input Required';
+                modalTitle.classList.add('text-error');
+                modalMessage.textContent = 'Please enter a text prompt or select a reference image.';
+                modalCloseBtn.classList.remove('hidden');
+                return;
+            }
+
+            // Show loading modal
+            modal.classList.remove('hidden');
+            modalTitle.innerHTML = '<i data-lucide="cpu" style="width:20px;height:20px;vertical-align:-4px;margin-right:8px;"></i>Phase 1: Gemini Analysis';
+            lucide.createIcons();
+            modalMessage.innerHTML = 'Sending context to Gemini for semantic reasoning...<br><br><span id="timer" style="font-family: monospace; font-size: 1.2rem; color: #fff;">00:00</span>';
+            modalCloseBtn.classList.add('hidden');
+            result.innerHTML = '';
+
+            // Start Timer
+            let seconds = 0;
+            const intervalId = setInterval(() => {
+                seconds++;
+                const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const secs = String(seconds % 60).padStart(2, '0');
+                const timerSpan = document.getElementById('timer');
+                if (timerSpan) {
+                    timerSpan.innerHTML = `<span style="background: #222; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #444;">${mins}:${secs}</span>`;
+                }
+            }, 1000);
+
+            const formData = new FormData();
+
+            // Append style modifier if selected
+            const styleMod = document.getElementById('styleModifier').value;
+            let finalPrompt = prompt || "Analyze this image and generate a visually descriptive prompt for a 3D model.";
+            if (styleMod) {
+                finalPrompt += ` Make it in a ${styleMod} style.`;
+            }
+
+            const geminiModel = document.getElementById('geminiModel').value;
+            const temperature = document.getElementById('geminiTemp').value;
+            const textureQuality = document.getElementById('textureQuality').value;
+            const tripoEngine = document.getElementById('tripoEngine').value;
+
+            formData.append('prompt', finalPrompt);
+            formData.append('useGemini', document.getElementById('useGemini').checked);
+            formData.append('geminiModel', geminiModel);
+            formData.append('temperature', temperature);
+
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            try {
+                // Phase 1: Analyze
+                const analyzeResponse = await fetch('/api/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const analyzeData = await analyzeResponse.json();
+
+                if (!analyzeResponse.ok) {
+                    throw new Error(analyzeData.error || 'Server error during Gemini analysis');
+                }
+
+                // Show Gemini Insights in Modal!
+                const analysis = analyzeData.analysis;
+                modalTitle.innerHTML = '<i data-lucide="box" style="width:20px;height:20px;vertical-align:-4px;margin-right:8px;"></i>Phase 2: Tripo3D Rendering';
+                modalMessage.innerHTML = `
+                    <div style="text-align: left; background: #111; padding: 1rem; border-radius: 8px; border: 1px solid #333; margin-bottom: 1rem; font-size: 0.85rem; color: #ddd; max-height: 250px; overflow-y: auto;">
+                        <h4 style="color: #3291ff; margin: 0 0 0.5rem 0; display:flex; align-items:center;"><i data-lucide="microscope" style="width:16px;height:16px;margin-right:6px;"></i> Gemini Insights</h4>
+                        <p style="margin: 0 0 0.5rem 0;"><strong>Category:</strong> ${analysis.objectCategory} | <strong>Complexity:</strong> ${analysis.complexityScore}/10</p>
+                        <p style="margin: 0 0 0.5rem 0;"><strong>Optimized Prompt:</strong> <br><i style="color: #aaa;">"${analysis.optimizedPrompt}"</i></p>
+                        <hr style="border: 0; border-top: 1px solid #333; margin: 0.5rem 0;">
+                        <h4 style="color: #3291ff; margin: 0 0 0.5rem 0; display:flex; align-items:center;"><i data-lucide="sliders-horizontal" style="width:16px;height:16px;margin-right:6px;"></i> Configuration Applied</h4>
+                        <p style="margin: 0;"><strong>Reasoning:</strong> ${geminiModel} (Temp: ${temperature}) <br> <strong>Render:</strong> Tripo3D API (${tripoEngine} | ${textureQuality})</p>
+                    </div>
+                    <div style="color: #aaa;">Waiting for Tripo3D Engine...</div>
+                    <br><span id="timer" style="font-family: monospace; font-size: 1.2rem; color: #fff;"></span>
+                `;
+                lucide.createIcons();
+
+                // Phase 2: Render
+                const renderResponse = await fetch('/api/render', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        optimizedPrompt: analysis.optimizedPrompt,
+                        imagePath: analyzeData.imagePath,
+                        textureQuality: textureQuality,
+                        tripoEngine: tripoEngine
+                    })
+                });
+
+                const renderData = await renderResponse.json();
+
+                if (!renderResponse.ok) {
+                    throw new Error(renderData.error || 'Server error during Tripo3D rendering');
+                }
+
+                clearInterval(intervalId);
+
+                // Success
+                modal.classList.add('hidden');
+
+                const fileName = renderData.glbFilePath.split('\\\\').pop() || 'model.glb';
+                const modelUrl = `/api/model?path=${encodeURIComponent(renderData.glbFilePath)}`;
+
+                result.innerHTML = `
+                    <div class="result-card" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <h3 style="color: white; border-bottom: 1px solid #333; padding-bottom: 0.5rem; margin-top:0; display:flex; align-items:center;"><i data-lucide="check-circle-2" style="width:20px;height:20px;margin-right:8px;color:#3291ff;"></i> Generation Complete!</h3>
+                        
+                        <!-- 3D Viewer -->
+                        <div style="width: 100%; height: 350px; background: #000; border-radius: 8px; overflow: hidden; border: 1px solid #333; position: relative;">
+                            <model-viewer src="${modelUrl}" auto-rotate camera-controls shadow-intensity="1" style="width: 100%; height: 100%;"></model-viewer>
+                            <button onclick="this.previousElementSibling.requestFullscreen()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); border: 1px solid #444; color: white; border-radius: 6px; padding: 6px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(50,145,255,0.8)'; this.style.borderColor='#3291ff';" onmouseout="this.style.background='rgba(0,0,0,0.6)'; this.style.borderColor='#444';" title="Fullscreen">
+                                <i data-lucide="maximize" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn-secondary" style="flex: 1;" onclick="openInExplorer('${renderData.glbFilePath.replace(/\\/g, '\\\\')}')"><i data-lucide="folder-open" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>Show in Explorer</button>
+                            <a href="${modelUrl}" download="${fileName}" class="btn-secondary" style="flex: 1; text-align: center; text-decoration: none; line-height: 2.2;"><i data-lucide="download" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>Download .glb</a>
+                        </div>
+                        
+                        <!-- Metadata -->
+                        <div style="font-size: 0.8rem; color: #aaa; background: #0a0a0a; padding: 1rem; border-radius: 6px; border: 1px solid #222;">
+                            <p style="margin-bottom: 0.5rem;"><strong style="color:white;">Optimized Prompt:</strong> ${analysis.optimizedPrompt}</p>
+                            <div style="display: flex; justify-content: space-between;">
+                                <p><strong style="color:white;">Category:</strong> ${analysis.objectCategory}</p>
+                                <p><strong style="color:white;">Complexity:</strong> ${analysis.complexityScore}/10</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+
+                // Update history sidebar with new model
+                fetchHistory();
+
+            } catch (error) {
+                clearInterval(intervalId);
+                // Error handling in modal
+                modalSpinner.classList.add('hidden');
+                modalTitle.textContent = 'Generation Failed';
+                modalTitle.classList.add('text-error');
+                modalMessage.textContent = error.message;
+                modalCloseBtn.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('modalCloseBtn').addEventListener('click', () => {
+            document.getElementById('overlayModal').classList.add('hidden');
+        });
+
+        async function openInExplorer(filePath) {
+            try {
+                await fetch('/api/open-explorer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: filePath })
+                });
+            } catch (e) {
+                console.error("Failed to open explorer", e);
+            }
+        }
+        let currentRenamePath = '';
+        let currentRenameOldName = '';
+
+        window.renameModel = (oldPath, oldName) => {
+            currentRenamePath = oldPath;
+            currentRenameOldName = oldName;
+            const input = document.getElementById('renameInput');
+            input.value = oldName.replace('.glb', '');
+            document.getElementById('renameErrorMsg').classList.add('hidden');
+            document.getElementById('renameModal').classList.remove('hidden');
+            setTimeout(() => input.focus(), 100);
+        };
+
+        document.getElementById('confirmRenameBtn').addEventListener('click', async () => {
+            const newName = document.getElementById('renameInput').value.trim();
+            if (!newName || newName === currentRenameOldName.replace('.glb', '')) {
+                document.getElementById('renameModal').classList.add('hidden');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/rename', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ oldPath: currentRenamePath, newName })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                
+                document.getElementById('renameModal').classList.add('hidden');
+                fetchHistory();
+            } catch (e) {
+                const errorEl = document.getElementById('renameErrorMsg');
+                errorEl.textContent = "Failed to rename: " + e.message;
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+
+        window.importTaskPrompt = () => {
+            document.getElementById('importTaskIdInput').value = '';
+            document.getElementById('importTaskModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('importTaskIdInput').focus(), 100);
+        };
+
+        document.getElementById('submitImportBtn').addEventListener('click', async () => {
+            const taskId = document.getElementById('importTaskIdInput').value.trim();
+            if (!taskId) return;
+
+            document.getElementById('importTaskModal').classList.add('hidden');
+
+            modalSpinner.classList.remove('hidden');
+            modalTitle.textContent = 'Importing Model...';
+            modalTitle.classList.remove('text-error');
+            modalMessage.textContent = `Fetching Task ${taskId} from Tripo3D Cloud...`;
+            modalCloseBtn.classList.add('hidden');
+            document.getElementById('overlayModal').classList.remove('hidden');
+
+            try {
+                const res = await fetch('/api/import-task', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskId })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                document.getElementById('overlayModal').classList.add('hidden');
+                fetchHistory(); // refresh sidebar
+            } catch (e) {
+                modalSpinner.classList.add('hidden');
+                modalTitle.textContent = 'Import Failed';
+                modalTitle.classList.add('text-error');
+                modalMessage.textContent = e.message;
+                modalCloseBtn.classList.remove('hidden');
+            }
+        });
+
+        // History Logic
+        async function fetchHistory() {
+            try {
+                const response = await fetch('/api/history');
+                const data = await response.json();
+
+                const historyList = document.getElementById('historyList');
+                const galleryGrid = document.getElementById('galleryGrid');
+
+                historyList.innerHTML = '';
+                galleryGrid.innerHTML = '';
+
+                if (data.files.length === 0) {
+                    historyList.innerHTML = '<p style="color: #666; font-size: 0.9rem; text-align: center; margin-top: 2rem;">No models generated yet.</p>';
+                    return;
+                }
+
+                // Render top 10 for sidebar
+                data.files.slice(0, 10).forEach(file => {
+                    const card = createHistoryCard(file);
+                    historyList.appendChild(card);
+                });
+
+                // Render all for gallery
+                data.files.forEach(file => {
+                    const card = createHistoryCard(file, true);
+                    galleryGrid.appendChild(card);
+                });
+            } catch (e) {
+                console.error("Failed to fetch history", e);
+            }
+        }
+
+        window.loadModelViewer = (container) => {
+            if (container.querySelector('model-viewer')) return;
+            const url = container.getAttribute('data-url');
+            container.innerHTML = `
+                <model-viewer src="${url}" auto-rotate camera-controls shadow-intensity="1" style="width: 100%; height: 100%; position: absolute; inset: 0;"></model-viewer>
+                <button onclick="this.previousElementSibling.requestFullscreen()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); border: 1px solid #444; color: white; border-radius: 4px; padding: 4px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; z-index: 10;" onmouseover="this.style.background='rgba(50,145,255,0.8)'; this.style.borderColor='#3291ff';" onmouseout="this.style.background='rgba(0,0,0,0.6)'; this.style.borderColor='#444';" title="Fullscreen">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                </button>
+            `;
+        };
+
+        window.unloadModelViewer = (container) => {
+            container.innerHTML = `
+                <div class="placeholder-icon" style="text-align: center; pointer-events: none;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <div style="font-size: 0.65rem; color: #444; margin-top: 0.5rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Hover to 3D Render</div>
+                </div>
+            `;
+        };
+
+        function createHistoryCard(file, isGallery = false) {
+            const div = document.createElement('div');
+            div.style.background = '#111';
+            div.style.border = '1px solid #333';
+            div.style.borderRadius = '8px';
+            div.style.overflow = 'hidden';
+            div.style.display = 'flex';
+            div.style.flexDirection = 'column';
+            div.style.flexShrink = '0';
+
+            div.innerHTML = `
+                <div class="model-container" data-url="${file.url}" style="height: ${isGallery ? '200px' : '150px'}; background: #000; position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;" onmouseenter="this.style.background='#0a0a0a'; loadModelViewer(this)" onmouseleave="this.style.background='#000'; unloadModelViewer(this)" onclick="loadModelViewer(this)">
+                    <div class="placeholder-icon" style="text-align: center; pointer-events: none;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        <div style="font-size: 0.65rem; color: #444; margin-top: 0.5rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Hover to 3D Render</div>
+                    </div>
+                </div>
+                <div style="padding: 0.8rem; font-size: 0.8rem;">
+                    <p style="color: #fff; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${file.name}">${file.name}</p>
+                    <p style="color: #666; font-size: 0.7rem;">${file.date}</p>
+                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                        <button onclick="renameModel('${file.path.replace(/\\/g, '\\\\')}', '${file.name}')" style="background: none; border: 1px solid #444; color: #aaa; border-radius: 4px; cursor: pointer; padding: 0.2rem 0.5rem; flex: 0.5;" title="Rename File">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        </button>
+                        <a href="${file.url}" download="${file.name}" style="color: #aaa; text-decoration: none; border: 1px solid #444; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; display: block; text-align: center; flex: 1;">Download</a>
+                        <button onclick="openInExplorer('${file.path.replace(/\\/g, '\\\\')}')" style="background: none; border: 1px solid #444; color: #aaa; border-radius: 4px; cursor: pointer; flex: 1;">Folder</button>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        document.getElementById('showGalleryBtn').addEventListener('click', () => {
+            document.getElementById('galleryModal').classList.remove('hidden');
+        });
+
+        document.getElementById('closeGalleryBtn').addEventListener('click', () => {
+            document.getElementById('galleryModal').classList.add('hidden');
+        });
+
+        // Fetch dynamic system status
+        async function fetchSystemStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                const gDot = document.getElementById('geminiDot');
+                const gText = document.getElementById('geminiText');
+                let showGuide = false;
+
+                if (data.geminiConnected) {
+                    gDot.style.background = '#3291ff';
+                    gText.textContent = 'Gemini API Connected';
+                } else {
+                    gDot.style.background = '#ff4a4a';
+                    gText.textContent = 'Gemini API Missing';
+                    showGuide = true;
+                }
+
+                const tDot = document.getElementById('tripoDot');
+                const tText = document.getElementById('tripoText');
+                if (data.tripoConnected) {
+                    tDot.style.background = '#3291ff';
+                    tText.textContent = `Tripo3D: ${data.tripoBalance} Credits`;
+                } else {
+                    tDot.style.background = '#ff4a4a';
+                    tText.textContent = 'Tripo3D Disconnected';
+                    showGuide = true;
+                }
+
+                if (showGuide) {
+                    document.getElementById('setupModal').classList.remove('hidden');
+                } else {
+                    document.getElementById('setupModal').classList.add('hidden');
+                }
+            } catch (e) {
+                console.error("Failed to fetch system status:", e);
+            }
+        }
+
+        // Setup Config Logic
+        document.getElementById('saveConfigBtn').addEventListener('click', async () => {
+            const geminiKey = document.getElementById('geminiKeyInput').value.trim();
+            const tripoKey = document.getElementById('tripoKeyInput').value.trim();
+            const btn = document.getElementById('saveConfigBtn');
+            const errorMsg = document.getElementById('setupErrorMsg');
+
+            errorMsg.classList.add('hidden');
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ geminiKey, tripoKey })
+                });
+
+                if (response.ok) {
+                    // Refetch status to hide modal and update dots
+                    await fetchSystemStatus();
+                } else {
+                    throw new Error('Failed to save configuration');
+                }
+            } catch (e) {
+                errorMsg.textContent = 'Error: Could not save config.';
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btn.textContent = 'Save & Connect';
+                btn.disabled = false;
+            }
+        });
+
+        // Fetch history and status on load
+        fetchHistory();
+        fetchSystemStatus();
+
+        // Initialize icons on page load
+        lucide.createIcons();
+
+        // UI Interactions
+        document.getElementById('geminiTemp').addEventListener('input', (e) => {
+            document.getElementById('tempValue').textContent = parseFloat(e.target.value).toFixed(1);
+        });
+
+        document.getElementById('useGemini').addEventListener('change', (e) => {
+            const isEnabled = e.target.checked;
+            document.getElementById('geminiModel').disabled = !isEnabled;
+            document.getElementById('geminiTemp').disabled = !isEnabled;
+            document.getElementById('geminiModel').style.opacity = isEnabled ? '1' : '0.5';
+            document.getElementById('geminiTemp').style.opacity = isEnabled ? '1' : '0.5';
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - agent-3d-mesh</title>
+    <link rel="icon" type="image/svg+xml" href="/logo.svg">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .docs-container {
+            max-width: 900px;
+            margin: 4rem auto 8rem auto;
+            padding: 2rem;
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #222;
+            border-radius: 12px;
+            color: #ddd;
+            line-height: 1.6;
+        }
+
+        .docs-container h1 {
+            color: #fff;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .docs-container h2 {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-top: 2.5rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+        }
+
+        .docs-container h3 {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+        }
+
+        .docs-container p {
+            margin-bottom: 1rem;
+        }
+
+        .docs-container code {
+            background: #222;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #3291ff;
+        }
+
+        .docs-container pre {
+            background: #111;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+            overflow-x: auto;
+            font-family: monospace;
+            color: #ddd;
+            margin: 1.5rem 0;
+        }
+
+        .docs-container ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .docs-container li {
+            margin-bottom: 0.5rem;
+        }
+
+        .docs-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <img src="logo.svg" alt="Logo" style="height: 32px; margin-right: 8px; vertical-align: middle;"> agent-3d-mesh <span class="version">v1.0.0</span>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/app.html">Launch App</a>
+            <a href="/docs.html">Documentation</a>
+        </div>
+    </nav>
+
+    <div class="app-layout" style="overflow-y: auto;">
+        <div class="docs-container">
+            <h1>Documentation</h1>
+            <p style="color: #888; font-size: 1.1rem; margin-bottom: 3rem;">Technical architecture and implementation guide for the Agentic 3D Generation Orchestrator.</p>
+
+            <div class="docs-card">
+                <h3 style="margin-top: 0;">What this library actually does</h3>
+                <p>This library acts as a <strong>backend orchestrator (Node.js)</strong> that connects two powerful cloud APIs to create a seamless end-to-end pipeline for 3D model generation. It takes unstructured user input (text or images) and outputs a fully textured, production-ready <code>.glb</code> 3D model.</p>
+                <p>All heavy lifting is deliberately offloaded to <strong>Google Gemini</strong> (for semantic reasoning) and <strong>Tripo3D</strong> (for 3D mesh rendering), bypassing any local hardware limitations.</p>
+            </div>
+
+            <h2>Architecture Overview</h2>
+            <p>The pipeline (<code>MeshPipeline</code>) is broken down into two distinct asynchronous phases:</p>
+            
+            <h3>1. Semantic Reasoning & Prompt Optimization (Gemini)</h3>
+            <p>Users rarely write perfect prompts for 3D generation. We use the <code>@google/genai</code> SDK to pass the user's text and optional reference image to Google Gemini. Gemini acts as an expert technical director to:</p>
+            <ul>
+                <li><strong>Optimize the Prompt:</strong> Rewrite the prompt to emphasize 3D geometry, lighting, PBR materials, and layout.</li>
+                <li><strong>Categorize:</strong> Identify if the object is an environment, character, vehicle, or prop.</li>
+                <li><strong>Score Complexity:</strong> Assign a complexity score from 1 to 10.</li>
+            </ul>
+            <p>The UI allows you to inject configurations like the specific Gemini model (<code>gemini-1.5-pro</code> or <code>gemini-1.5-flash</code>) and the <code>temperature</code> to control the creativity of the optimization.</p>
+
+            <h3>2. 3D Mesh Generation (Tripo3D)</h3>
+            <p>The optimized prompt (and an image token, if an image was uploaded) is then passed to the <code>Tripo3DClient</code>. This client manages the interaction with the Tripo3D V2 API:</p>
+            <ul>
+                <li><strong>File Uploads:</strong> If an image is provided, it is securely uploaded to Tripo's endpoint to obtain a <code>file_token</code>.</li>
+                <li><strong>Task Submission:</strong> A task payload (either <code>text_to_model</code> or <code>image_to_model</code>) is submitted to the Tripo API, injecting advanced parameters like <code>texture_quality</code>.</li>
+                <li><strong>Polling:</strong> The API is asynchronous. The client polls the status endpoint every 3 seconds until the status is <code>success</code>.</li>
+                <li><strong>Download:</strong> The generated <code>.glb</code> model is downloaded via a secure signed URL and saved directly to the local <code>uploads/</code> directory.</li>
+            </ul>
+
+            <h2>Configuration Parameters</h2>
+            <p>The UI left sidebar maps directly to native API parameters:</p>
+            <pre><code>// Example payload to Tripo3D API
+{
+  "type": "image_to_model",
+  "model_version": "v2.5",
+  "file": {
+    "type": "jpg",
+    "file_token": "..."
+  },
+  "texture_quality": "detailed" // Controls PBR map resolution
+}</code></pre>
+
+            <pre><code>// Example config to Google Gemini API
+const response = await ai.models.generateContent({
+  model: "gemini-1.5-pro",
+  config: {
+    temperature: 1.5, // High creativity
+    responseMimeType: "application/json",
+    // responseSchema enforces strict JSON output
+  }
+});</code></pre>
+
+            <h2>Evolution to agent-3d-mesh & UI/UX Polish</h2>
+            <p>The library was renamed to <strong><code>agent-3d-mesh</code></strong> to better reflect its agnostic architecture. While it uses Gemini and Tripo3D by default, the pipeline is designed around the concept of an AI "agent" that reasons semantically before instructing a 3D engine to generate a "mesh".</p>
+            
+            <h3>Seamless Onboarding & Monetization</h3>
+            <p>To provide a zero-configuration start, the UI now features a dynamic <strong>Setup Modal</strong>. If API keys are missing from the environment (<code>.env</code>), the application intercepts the generation process and prompts the user to enter their credentials directly in the browser.</p>
+            <p>As a benefit for the open-source creator, the Setup Modal includes integrated <strong>Affiliate/Referral links</strong> (e.g., Tripo3D sign-up links). This allows developers to distribute the tool freely while earning commissions or bonus credits when new users create their API accounts.</p>
+
+            <h3>Desktop-Class Aesthetics</h3>
+            <p>The frontend was heavily polished to look and feel like a native desktop application (SPA):</p>
+            <ul>
+                <li><strong>Strict Viewport Containment:</strong> The <code>body</code> is locked to <code>100vh</code> with <code>overflow: hidden</code>, ensuring the layout never jumps or expands indefinitely.</li>
+                <li><strong>Custom Independent Scrollbars:</strong> Components like the History sidebar and the Gallery Grid manage their own internal scrolling. Global Webkit scrollbars were styled as floating, dark-mode pills using <code>background-clip: padding-box</code> and transparent borders.</li>
+            </ul>
+
+            <h2>Project Structure</h2>
+            <ul>
+                <li><code>src/server.ts</code>: Express server handling file uploads, API endpoints, and static UI serving.</li>
+                <li><code>src/index.ts</code>: The <code>MeshPipeline</code> class that glues the two services together.</li>
+                <li><code>src/core/GeminiAnalyzer.ts</code>: Handles the <code>@google/genai</code> SDK interaction and JSON schema validation.</li>
+                <li><code>src/core/Tripo3DClient.ts</code>: Handles HTTP polling, file streams, and error handling for Tripo3D.</li>
+                <li><code>public/</code>: The Vanilla JS, CSS, and HTML frontend interface.</li>
+            </ul>
+
+        </div>
+    </div>
+</body>
+</html>

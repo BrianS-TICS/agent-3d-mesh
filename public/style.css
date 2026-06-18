@@ -1,0 +1,384 @@
+:root {
+    --bg-color: #000000;
+    --text-color: #ffffff;
+    --text-dim: #888888;
+    --border-color: #333333;
+    --primary: #ffffff;
+    --primary-text: #000000;
+    --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-stack);
+    -webkit-font-smoothing: antialiased;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.logo {
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+}
+
+.version {
+    font-size: 0.7rem;
+    background: #222;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 10px;
+    color: var(--text-dim);
+    font-weight: 500;
+    font-family: monospace;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.nav-links a:hover {
+    color: var(--text-color);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    background: #1a1a1a;
+    color: #fff;
+    border: 1px solid #333;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #333;
+    border-color: #555;
+}
+
+.hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10%;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 600px;
+    z-index: 10;
+    width: 100%;
+}
+
+.title {
+    font-size: 3.5rem;
+    font-weight: 600;
+    letter-spacing: -0.05em;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(to right, #fff, #999);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+}
+
+.upload-container {
+    background: rgba(10, 10, 10, 0.5);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+    backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    text-align: left;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-label {
+    font-size: 0.85rem;
+    color: #aaa;
+    font-weight: 500;
+}
+
+.input-field {
+    background: #000;
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 0.8rem;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #666;
+}
+
+.file-upload {
+    position: relative;
+}
+
+.file-label {
+    display: block;
+    background: #000;
+    border: 1px dashed var(--border-color);
+    color: var(--text-dim);
+    padding: 1rem;
+    text-align: center;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.file-label:hover {
+    border-color: #666;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.file-label input[type="file"] {
+    display: none;
+}
+
+.status-message {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+
+.result-card {
+    background: #111;
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: #ccc;
+    line-height: 1.6;
+}
+
+.result-card strong {
+    color: white;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    background: rgba(15, 15, 15, 0.9);
+    border: 1px solid var(--border-color);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1.5rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.modal-message {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+}
+
+/* Modal Utilities */
+.hidden {
+    display: none !important;
+}
+
+/* App Layout & Sidebar */
+.app-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    /* Prevent body scroll */
+}
+
+.hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding-bottom: 2rem;
+}
+
+.history-sidebar,
+.left-sidebar {
+    width: 320px;
+    background: #0a0a0a;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.left-sidebar {
+    overflow-y: auto;
+    border-right: 1px solid #222;
+}
+
+.history-sidebar {
+    overflow-y: hidden;
+    border-left: 1px solid #222;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Global Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #333;
+    border-radius: 10px;
+    border: 4px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
+    border: 4px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Model Viewer Performance Optimizations */
+model-viewer {
+    /* Hardware acceleration and strict containment for 60fps fullscreen */
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    contain: strict;
+    /* Limit the rendering scale to prevent huge VRAM usage on 4K/Retina displays */
+    --min-hotspot-opacity: 0;
+}
+
+/* Extreme Fullscreen Performance Optimization */
+model-viewer:fullscreen {
+    /* Force WebGL canvas to render at a maximum of 720p (1280x720) to save VRAM */
+    width: 1280px !important;
+    height: 720px !important;
+    margin: auto !important;
+    /* Hardware-accelerated scale to stretch the 720p render to fill the native screen (e.g., 4K) */
+    transform: scale(min(calc(100vw / 1280), calc(100vh / 720))) translate3d(0, 0, 0) !important;
+    transform-origin: center center !important;
+    background-color: #000 !important;
+}

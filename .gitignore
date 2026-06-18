@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+uploads/
+scratch/
+*.glb
+*.log
+.DS_Store
+*.lock
