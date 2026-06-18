@@ -6,4 +6,5 @@ scratch/
 *.glb
 *.log
 .DS_Store
-*.lock
+# Demo assets (binary files - not needed in repo)
+demo-assets/

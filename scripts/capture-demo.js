@@ -7,7 +7,7 @@
  * Usage: node scripts/capture-demo.js
  */
 
-const { chromium } = require('playwright');
+const { firefox } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
@@ -27,9 +27,8 @@ async function captureDemo() {
   console.log('🚀 Starting LinkedIn demo capture...\n');
   console.log(`📁 Output directory: ${OUTPUT_DIR}\n`);
 
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  const browser = await firefox.launch({
+    headless: true
   });
 
   const context = await browser.newContext({
